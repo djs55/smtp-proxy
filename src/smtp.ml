@@ -1,4 +1,12 @@
 
+(* [suffix prefix x] returns [None] if [prefix] is not a prefix of [x]
+   and [Some suffix] if [prefix ^ suffix = x] *)
+let suffix prefix x =
+  let prefix' = String.length prefix and x' = String.length x in
+  if prefix' <= x' && (String.sub x 0 prefix' = prefix)
+  then Some (String.sub x prefix' (x' - prefix'))
+  else None
+
 module Request = struct
   type t =
     | Helo of string
@@ -6,6 +14,30 @@ module Request = struct
     | RcptTo of string
     | Data
     | Quit
+    | Unknown
+
+  let of_string x =
+    match suffix "HELO" x with
+    | Some x -> Helo x
+    | None ->
+      begin match suffix "MAIL FROM:" x with
+      | Some x -> MailFrom x
+      | None ->
+        begin match suffix "RCPT TO:" x with
+        | Some x -> RcptTo x
+        | None ->
+          begin match suffix "DATA" x with
+            | Some "" -> Data
+            | Some _ -> Unknown
+            | None ->
+              begin match suffix "QUIT" x with
+              | Some "" -> Quit
+              | Some _
+              | None -> Unknown
+              end
+          end
+        end
+      end
 end
 
 module Response = struct

@@ -6,6 +6,7 @@ module Request : sig
     | RcptTo of string
     | Data
     | Quit
+    | Unknown (** something we didn't understand *)
   (** requests sent by the client to the server *)
 
 end
