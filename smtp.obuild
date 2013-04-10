@@ -1,0 +1,9 @@
+name: smtp-proxy 
+version: 0.0.1
+synopsis: A simple SMTP proxy in OCaml
+obuild-ver: 1
+
+executable smtp-proxy
+  src-dir: src
+  main-is: main.ml
+  build-deps: core, async
