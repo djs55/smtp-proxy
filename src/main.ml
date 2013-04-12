@@ -17,7 +17,7 @@ let server () =
     (fun _ reader writer ->
       let send t = Writer.write writer (Response.to_string t) in
       Deferred.create (fun finished ->
-      send (Response.ServiceReady, "ocaml smtp-proxy");
+        send (Response.ServiceReady, "ocaml smtp-proxy");
         let rec body envelope =
           upon (Reader.read_line reader) (function
           | `Ok "." ->
@@ -41,11 +41,15 @@ let server () =
             | Data ->
               send (Response.PleaseSendBody, "Start mail input; end with <CR><LF>.<CR><LF>");
               body envelope
+            | Quit ->
+              send Response.ok;
+              message "client said quit\n";
+              Ivar.fill finished ()
             | _ ->
               let envelope = Envelope.update envelope req in
               send Response.ok;
               message (sprintf "Server got query: %s\n" line);
-              Writer.write writer (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
+              message (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
               loop envelope
             end;
           | `Eof ->
