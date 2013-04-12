@@ -1,9 +1,9 @@
 
-(* [suffix prefix x] returns [None] if [prefix] is not a prefix of [x]
-   and [Some suffix] if [prefix ^ suffix = x] *)
+(* [suffix prefix x] returns [None] if [prefix] is not a case-insensitive
+   prefix of [x] and [Some suffix] if [prefix ^ suffix = x] *)
 let suffix prefix x =
   let prefix' = String.length prefix and x' = String.length x in
-  if prefix' <= x' && (String.sub x 0 prefix' = prefix)
+  if prefix' <= x' && (String.lowercase (String.sub x 0 prefix') = String.lowercase prefix)
   then Some (String.sub x prefix' (x' - prefix'))
   else None
 
