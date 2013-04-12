@@ -18,21 +18,36 @@ let server () =
       let send t = Writer.write writer (Response.to_string t) in
       Deferred.create (fun finished ->
       send (Response.ServiceReady, "ocaml smtp-proxy");
+        let rec body envelope =
+          upon (Reader.read_line reader) (function
+          | `Ok "." ->
+            send Response.ok;
+            loop Envelope.empty
+          | `Ok x ->
+            (* ignore the body for now *)
+            body envelope
+          | `Eof ->
+            message "Server got EOF during body\n")
 
-        let rec loop envelope =
+        and loop envelope =
           upon (Reader.read_line reader) (function
           | `Ok line ->
             let open Request in
             let req = of_string line in
             begin match req with
-            | Unknown -> send (Response.SyntaxError, "I have no idea what you just said")
-            | _ -> send Response.ok
+            | Unknown ->
+              send (Response.SyntaxError, "I have no idea what you just said");
+              loop envelope
+            | Data ->
+              send (Response.PleaseSendBody, "Start mail input; end with <CR><LF>.<CR><LF>");
+              body envelope
+            | _ ->
+              let envelope = Envelope.update envelope req in
+              send Response.ok;
+              message (sprintf "Server got query: %s\n" line);
+              Writer.write writer (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
+              loop envelope
             end;
-            let envelope = Envelope.update envelope req in
-
-            message (sprintf "Server got query: %s\n" line);
-            Writer.write writer (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
-            loop envelope
           | `Eof ->
             message "Server got EOF\n")
         in
