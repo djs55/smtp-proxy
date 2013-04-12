@@ -42,6 +42,7 @@ end
 
 module Response = struct
   type code =
+    | ServiceReady
     | Ok
     | PleaseSendBody
     | BusyRetryLater
@@ -50,6 +51,7 @@ module Response = struct
     | UnknownError
 
   let code_of_int = function
+    | 220 -> ServiceReady
     | 250 -> Ok
     | 354 -> PleaseSendBody
     | 450 -> BusyRetryLater
@@ -59,6 +61,7 @@ module Response = struct
     | _   -> UnknownError (* treat everything else as 'unknown' *)
 
   let int_of_code = function
+    | ServiceReady    -> 220
     | Ok              -> 250
     | PleaseSendBody  -> 354
     | BusyRetryLater  -> 450
@@ -67,6 +70,8 @@ module Response = struct
     | UnknownError    -> 554
 
   type t = code * string
+
+  let to_string t = "554 unimplemented\r\n"
 
   let ok = Ok, "ok"
 end

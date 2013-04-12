@@ -15,10 +15,14 @@ let port = ref 8025
 let server () =
   Tcp.Server.create (Tcp.on_port !port)
     (fun _ reader writer ->
+      let send t = Writer.write writer (Response.to_string t) in
       Deferred.create (fun finished ->
+      send (Response.ServiceReady, "ocaml smtp-proxy");
+
         let rec loop () =
           upon (Reader.read_line reader) (function
           | `Ok query ->
+
             message (sprintf "Server got query: %s\n" query);
             Writer.write writer (sprintf "Response to %s\n" query);
             loop ()
