@@ -71,7 +71,8 @@ module Response = struct
 
   type t = code * string
 
-  let to_string t = "554 unimplemented\r\n"
+  let to_string (code, string) =
+    Printf.sprintf "%d %s\r\n" (int_of_code code) string
 
   let ok = Ok, "ok"
 end
