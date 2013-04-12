@@ -68,4 +68,18 @@ module Response = struct
 
   type t = code * string
 
+  let ok = Ok, "ok"
+end
+
+module Envelope = struct
+  type t = {
+    return_path: string;
+    recipient_addresses: string list;
+  }
+
+  open Request
+  let update t = function
+    | MailFrom x -> {t with return_path = x}
+    | RcptTo x -> {t with recipient_addresses = x :: t.recipient_addresses}
+    | _ -> t
 end

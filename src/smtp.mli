@@ -25,3 +25,8 @@ module Response : sig
       semantically-meaningful code plus a human-readable string. *)
 end
 
+module Envelope : sig
+  type t
+
+  val update: t -> Request.t -> t
+end
