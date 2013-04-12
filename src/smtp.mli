@@ -10,7 +10,6 @@ module Request : sig
   (** requests sent by the client to the server *)
 
   val of_string: string -> t
-
 end
 
 module Response : sig
@@ -28,10 +27,16 @@ module Response : sig
       semantically-meaningful code plus a human-readable string. *)
 
   val to_string: t -> string
+
+  val ok: t
 end
 
 module Envelope : sig
   type t
 
+  val empty: t
+
   val update: t -> Request.t -> t
+
+  val to_debug_string: t -> string
 end

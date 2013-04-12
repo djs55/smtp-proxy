@@ -19,17 +19,24 @@ let server () =
       Deferred.create (fun finished ->
       send (Response.ServiceReady, "ocaml smtp-proxy");
 
-        let rec loop () =
+        let rec loop envelope =
           upon (Reader.read_line reader) (function
-          | `Ok query ->
+          | `Ok line ->
+            let open Request in
+            let req = of_string line in
+            begin match req with
+            | Unknown -> send (Response.SyntaxError, "I have no idea what you just said")
+            | _ -> send Response.ok
+            end;
+            let envelope = Envelope.update envelope req in
 
-            message (sprintf "Server got query: %s\n" query);
-            Writer.write writer (sprintf "Response to %s\n" query);
-            loop ()
+            message (sprintf "Server got query: %s\n" line);
+            Writer.write writer (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
+            loop envelope
           | `Eof ->
             message "Server got EOF\n")
         in
-        loop ()))
+        loop Envelope.empty))
 
 let () =
   (* TODO: parse arguments *)

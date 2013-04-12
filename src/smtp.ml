@@ -83,9 +83,19 @@ module Envelope = struct
     recipient_addresses: string list;
   }
 
+  let empty = {
+    return_path = "";
+    recipient_addresses = []
+  }
+
   open Request
   let update t = function
     | MailFrom x -> {t with return_path = x}
     | RcptTo x -> {t with recipient_addresses = x :: t.recipient_addresses}
     | _ -> t
+
+  let to_debug_string t =
+    Printf.sprintf "return_path = %s; recipient_addresses = [ %s ]"
+      t.return_path
+      (String.concat "; " t.recipient_addresses)
 end
