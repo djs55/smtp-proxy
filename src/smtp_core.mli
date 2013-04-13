@@ -9,5 +9,5 @@ end
 
 
 module Server : sig
-  val handler: (Mail.t -> unit) -> Reader.t -> Writer.t -> unit Deferred.t
+  val handler: Reader.t -> Writer.t -> Mail.t Pipe.Reader.t * unit Deferred.t
 end

@@ -13,7 +13,8 @@ let message s = Writer.write stdout_writer s
 
 module Server = struct
 
-  let handler callback reader writer =
+  let handler reader writer =
+    let mails_reader, mails_writer = Pipe.create () in
     let send t = Writer.write writer (Response.to_string t) in
     send (Response.ServiceReady, "ocaml smtp-proxy");
     let rec body envelope writer : unit Deferred.t =
@@ -43,7 +44,8 @@ module Server = struct
         | Data ->
           send (Response.PleaseSendBody, "Start mail input; end with <CR><LF>.<CR><LF>");
           let reader, writer = Pipe.create () in
-          callback (envelope, reader);
+          let mail = envelope, reader in
+          Pipe.write_without_pushback mails_writer mail;
           body envelope writer
         | Quit ->
           send Response.ok;
@@ -59,6 +61,6 @@ module Server = struct
       | `Eof ->
         message "Server got EOF\n";
         return () in
-    loop Envelope.empty
+    mails_reader, loop Envelope.empty
 
 end
