@@ -9,7 +9,7 @@ end
 
 
 let stdout_writer = Lazy.force Writer.stdout
-let message s = Writer.write stdout_writer s
+let log s = Writer.write stdout_writer s
 
 module Server = struct
 
@@ -28,7 +28,9 @@ module Server = struct
         Pipe.write_without_pushback writer x;
         body envelope writer
       | `Eof ->
-        message "Server got EOF during body\n";
+        log "Server got EOF during body\n";
+        (* XXX: We probably should abort the processing of this mail *)
+        Pipe.close writer;
         return ()
 
     and loop envelope : unit Deferred.t =
@@ -49,17 +51,16 @@ module Server = struct
           body envelope writer
         | Quit ->
           send Response.ok;
-          message "client said quit\n";
+          Pipe.close mails_writer;
           return ()
         | _ ->
           let envelope = Envelope.update envelope req in
           send Response.ok;
-          message (sprintf "Server got query: %s\n" line);
-          message (sprintf "envelope = %s\n" (Envelope.to_debug_string envelope));
           loop envelope
         end;
       | `Eof ->
-        message "Server got EOF\n";
+        log "Server got EOF\n";
+        Pipe.close mails_writer;
         return () in
     mails_reader, loop Envelope.empty
 
